@@ -1,0 +1,23 @@
+.envrc
+.direnv
+/arxiv
+/cse
+/temp
+*/.streamlit/secrets.toml
+.mypy_cache
+__pycache__
+node_modules
+build
+index.json
+stored_documents.pkl
+.env
+author_storage/**/*
+* copy*
+.cache
+docs/autogen
+groupchat
+storage
+.DS_Store
+NEW_TEST_DIR
+TEST_DIR
+OAI_CONFIG_LIST.json
