@@ -4,7 +4,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain.prompts import PromptTemplate
-from langchain_community.chat_models import ChatOllama
+from langchain_groq import ChatGroq
 from langchain_core.output_parsers import JsonOutputParser
 from langchain import hub
 from langchain_core.output_parsers import StrOutputParser
@@ -12,30 +12,33 @@ from typing_extensions import TypedDict
 from typing import List
 from langchain.schema import Document
 from langgraph.graph import END, StateGraph
-from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain_exa import ExaSearchRetriever, TextContentsOptions
 from langchain_community.document_loaders import PyPDFLoader
 import streamlit as st
 import os
-from dotenv import load_dotenv
 
-local_llm = "llama3"
-
-load_dotenv()
-tavily_api_key = os.getenv('TAVILY_API_KEY')
+llm = ChatGroq(temperature=0, model_name="llama3-70b-8192")
+embeddings = OllamaEmbeddings(model="nomic-embed-text:latest")
+web_search_tool = ExaSearchRetriever(k=3, text_contents_options=TextContentsOptions(max_length=200))
 
 # Streamlit
 st.title("Adaptive RAG 🧠🔄📚")
-user_input = st.text_input("Question:", placeholder="What is your question?", key='input')
+# Create two columns with a ratio of 2:1
+col1, col2 = st.columns([2, 1])
 
-with st.sidebar:
-    uploaded_files = st.file_uploader("Upload your files", type=['pdf'], accept_multiple_files=True)
-    web_urls = st.text_area("Enter web URLs (one per line)")
-    process = st.button("Process")
+with col1:  
+    user_input = st.text_input("Question:", placeholder="What is your question?", key='input')
+
+with col2:
+    with st.sidebar:
+        uploaded_files = st.file_uploader("Upload your files", type=['pdf'], accept_multiple_files=True)
+        web_urls = st.text_area("Enter web URLs (one per line)")
+        process = st.button("Process")
 
 if process:
     if not uploaded_files and not web_urls:
         st.warning("Please upload at least one PDF file or enter at least one web URL.")
-        st.stop
+        st.stop()
 
     # Initialize variables
     text_chunks = []
@@ -65,7 +68,7 @@ if process:
                 st.error(f"Failed to load {uploaded_file.name}: {str(e)}")
 
             text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-                chunk_size=250, chunk_overlap=0
+                chunk_size=500, chunk_overlap=50
             )
             text_chunks = text_splitter.split_documents(data)
 
@@ -84,14 +87,25 @@ if process:
 
         # Split web documents
         text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-            chunk_size=250, 
-            chunk_overlap=0)
+            chunk_size=200, 
+            chunk_overlap=20)
         web_splits = text_splitter.split_documents(web_docs)
 
     # Combine both sets of documents
     combined_documents = text_chunks + web_splits
 
-    embeddings = OllamaEmbeddings(model="nomic-embed-text:latest")
+    # Summarize the documents to understand their topics
+    document_text = " ".join([doc.page_content for doc in combined_documents])
+
+    # Truncate the document text to fit within the token limit
+    max_tokens = 8192
+    truncated_document_text = document_text[:max_tokens]
+
+    summary_prompt = PromptTemplate(
+        template="Summarize the following text to understand its main topics:\n\n{text}",
+        input_variables=["text"],
+    )
+    summary = summary_prompt.invoke({"text": truncated_document_text})
 
     # Add to vectorDB
     vectorstore = Chroma.from_documents(
@@ -100,25 +114,25 @@ if process:
         embedding=embeddings,
     )
 
+    question = user_input
     retriever = vectorstore.as_retriever()
-    llm = ChatOllama(model=local_llm, format="json", temperature=0)
-    prompt = PromptTemplate(
+    
+    routing_prompt = PromptTemplate(
         template="""You are an expert at routing a user question to a vectorstore or web search. \n
-        Use the vectorstore for questions on LLM  agents, prompt engineering, and adversarial attacks. \n
-        You do not need to be stringent with the keywords in the question related to these topics. \n
+        Here is the summary of the loaded documents: {summary}\n
+        Based on this summary, use the vectorstore for questions relevant to the topics mentioned in the summary. \n
         Otherwise, use web-search. Give a binary choice 'web_search' or 'vectorstore' based on the question. \n
-        Return the a JSON with a single key 'datasource' and no premable or explaination. \n
+        Return the JSON with a single key 'datasource' and no preamble or explanation. \n
         Question to route: {question}""",
-        input_variables=["question"],
+        input_variables=["summary", "question"],
     )
 
-    question_router = prompt | llm | JsonOutputParser()
-    question = "llm agent memory"
+    question_router = routing_prompt | llm | JsonOutputParser()
     docs = retriever.get_relevant_documents(question)
     doc_txt = docs[1].page_content
-    st.write(question_router.invoke({"question": question}))
+    st.write("_Route question to:_")
+    st.write(question_router.invoke({"summary": summary, "question": question}))
 
-    llm = ChatOllama(model=local_llm, format="json", temperature=0)
     prompt = PromptTemplate(
             template="""You are a grader assessing relevance of a retrieved document to a user question. \n 
             Here is the retrieved document: \n\n {document} \n\n
@@ -131,16 +145,13 @@ if process:
         )
 
     retrieval_grader = prompt | llm | JsonOutputParser()
-    question = "agent memory"
     docs = retriever.get_relevant_documents(question)
     doc_txt = docs[1].page_content
+    st.write("_Question is relevant to document:_")
     st.write(retrieval_grader.invoke({"question": question, "document": doc_txt}))
 
     ### Generate
     prompt = hub.pull("rlm/rag-prompt")
-
-    # LLM
-    llm = ChatOllama(model=local_llm, temperature=0)
 
     # Post-processing
     def format_docs(docs):
@@ -150,12 +161,9 @@ if process:
     rag_chain = prompt | llm | StrOutputParser()
 
     # Run
-    question = "agent memory"
     generation = rag_chain.invoke({"context": docs, "question": question})
 
     ### Hallucination Grader 
-    # LLM
-    llm = ChatOllama(model=local_llm, format="json", temperature=0)
 
     # Prompt
     prompt = PromptTemplate(
@@ -171,12 +179,10 @@ if process:
     )
 
     hallucination_grader = prompt | llm | JsonOutputParser()
-    hallucination_grader.invoke({"documents": docs, "generation": generation})
+    st.write("_Answer is grounded:_")
+    st.write(hallucination_grader.invoke({"documents": docs, "generation": generation}))
 
     ### Answer Grader 
-
-    # LLM
-    llm = ChatOllama(model=local_llm, format="json", temperature=0)
 
     # Prompt
     prompt = PromptTemplate(
@@ -192,25 +198,21 @@ if process:
     )
 
     answer_grader = prompt | llm | JsonOutputParser()
-    answer_grader.invoke({"question": question,"generation": generation})
+    st.write("_Answer is useful to resolve question:_")
+    st.write(answer_grader.invoke({"question": question,"generation": generation}))
 
     ### Question Re-writer
-
-    # LLM
-    llm = ChatOllama(model=local_llm, temperature=0)
 
     # Prompt 
     re_write_prompt = PromptTemplate(
         template="""You a question re-writer that converts an input question to a better version that is optimized \n 
         for vectorstore retrieval. Look at the initial and formulate an improved question. \n
-        Here is the initial question: \n\n {question}. Improved question with no preamble: \n """,
-        input_variables=["generation", "question"],
+        Here is the initial question: \n\n {question}. Improved question with no preamble or explanation.: \n """,
+        input_variables=["question"],
     )
 
     question_rewriter = re_write_prompt | llm | StrOutputParser()
     question_rewriter.invoke({"question": question})
-
-    web_search_tool = TavilySearchResults(k=3,tavily_api_key=tavily_api_key)
 
     class GraphState(TypedDict):
         """
@@ -322,8 +324,8 @@ if process:
         question = state["question"]
 
         # Web search
-        docs = web_search_tool.invoke({"query": question})
-        web_results = "\n".join([d["content"] for d in docs])
+        docs = web_search_tool.invoke(question)
+        web_results = "\n".join([d.page_content for d in docs])
         web_results = Document(page_content=web_results)
 
         return {"documents": web_results, "question": question}
@@ -345,7 +347,7 @@ if process:
         question = state["question"]
         print(question)
 
-        source = question_router.invoke({"question": question})
+        source = question_router.invoke({"summary": summary, "question": question})
         print(source)
 
         if 'datasource' in source:

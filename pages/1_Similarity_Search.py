@@ -5,7 +5,6 @@ import json
 import streamlit as st
 from csv import writer
 from scipy import spatial
-from dotenv import load_dotenv
 from glob import glob
 import requests
 import ollama
@@ -17,16 +16,24 @@ from langchain_experimental.llms.ollama_functions import OllamaFunctions
 class Keywords(BaseModel):
     keywords: str = Field(description="The generated keywords in boolean format")
 
-load_dotenv()
-
 st.set_page_config(page_title="Paper Similarity Search 🔬")
 st.title("Paper Similarity Search 🔬")
 
 search_engine = st.selectbox("Select Search Engine:", ["arXiv", "CSE"])
 
-# Function for making an embedding request
+# Function to calculate relatedness between two vectors
+def relatedness_function(a, b):
+    return 1 - spatial.distance.cosine(a, b)
+
+# Function for making an embedding request with error handling
 def embedding_request(text):
-    response = ollama.embeddings(model='nomic-embed-text:latest', prompt=text)
+    print(f"Requesting embedding for: {text}")
+    try:
+        response = ollama.embeddings(model='nomic-embed-text:latest', prompt=text)
+    except Exception as e:
+        print(f"Error requesting embedding: {e}")
+        return None
+
     if isinstance(response, list):
         if isinstance(response[0], dict):
             embedding = response[0].get('embedding')
@@ -36,40 +43,63 @@ def embedding_request(text):
         embedding = response.get('embedding')
     else:
         raise ValueError("Unexpected response format from ollama.embeddings")
-    print(f"Ollama API response: {response}")
+    #print(f"Ollama API response: {response}")
     return embedding
 
-# Function to calculate relatedness between two vectors
-def relatedness_function(a, b):
-    return 1 - spatial.distance.cosine(a, b)
-
-# Function to search arXiv for academic papers
+# Enhanced arXiv search function with error handling
 def arxiv_search(query):
     if not os.path.exists('arxiv'):
         os.makedirs('arxiv')
 
-    client = arxiv.Client()
-    search = arxiv.Search(
-        query=query,
-        max_results=10
-    )
+    try:
+        client = arxiv.Client()
+        search = arxiv.Search(
+            query=query,
+            max_results=10
+        )
+    except Exception as e:
+        print(f"Error initializing arXiv client or search: {e}")
+        return []
+
     result_list = []
-    with open(f"arxiv/{query}.csv", "w", newline='') as f_object:
-        writer_object = writer(f_object)
-        query_embedding = embedding_request(query)
-        for result in client.results(search):
-            title_embedding = embedding_request(result.title)
-            relatedness_score = relatedness_function(query_embedding, title_embedding)
-            result_dict = {
-                "title": result.title,
-                "summary": result.summary,
-                "article_url": [x.href for x in result.links][0],
-                "pdf_url": [x.href for x in result.links][1],
-                "published": result.published.strftime("%Y-%m-%d"),
-                "relatedness_score": relatedness_score
-            }
-            result_list.append(result_dict)
-            writer_object.writerow([result.title, result.summary, result_dict["published"], result_dict["pdf_url"], relatedness_score])
+
+    try:
+        with open(f"arxiv/{query}.csv", "w", newline='') as f_object:
+            writer_object = writer(f_object)
+            query_embedding = embedding_request(query)
+
+            for result in client.results(search):
+                arxiv_embedding = embedding_request(result.summary)
+                if arxiv_embedding is None:
+                    print(f"Skipping result due to embedding error: {result.summary}")
+                    continue
+
+                relatedness_score = relatedness_function(query_embedding, arxiv_embedding)
+
+                result_dict = {
+                    "title": result.title,
+                    "summary": result.summary,
+                    "article_url": [x.href for x in result.links][0],
+                    "pdf_url": [x.href for x in result.links][1],
+                    "published": result.published.strftime("%Y-%m-%d"),
+                    "relatedness_score": relatedness_score
+                }
+
+                result_list.append(result_dict)
+                writer_object.writerow([
+                    result.title,
+                    result.summary,
+                    result_dict["published"],
+                    result_dict["pdf_url"],
+                    relatedness_score
+                ])
+
+                print(f"Result added: {result_dict}")
+
+    except Exception as e:
+        print(f"Error processing search results: {e}")
+        return []
+
     result_list.sort(key=lambda x: x['relatedness_score'], reverse=True)
     return result_list
 
@@ -98,8 +128,8 @@ def google_custom_search(query):
 
         # Calculate relatedness
         text_for_embedding = f"{title} {snippet}"
-        embedding = embedding_request(text_for_embedding)
-        relatedness_score = relatedness_function(query_embedding, embedding)
+        cse_embedding = embedding_request(text_for_embedding)
+        relatedness_score = relatedness_function(query_embedding, cse_embedding)
 
         results.append({
             "title": title,
@@ -144,20 +174,32 @@ def titles_ranked_by_relatedness(query, source):
 
 # Prompt template for keyword generation
 prompt = PromptTemplate.from_template(
-    """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
-    You are a smart assistant that generates keywords for a given query in a boolean format suitable for a scientific search, do not generate more than 8 keywords.
-    <|eot_id|><|start_header_id|>user<|end_header_id|>
-QUERY: {query} \n
-KEYWORDS:
-<|eot_id|>
-<|start_header_id|>assistant<|end_header_id|>
- """
+    """<|begin_of_text|><|start_header_id|>system<|end_header_id|>  \n
+    You are a smart assistant that generates keywords for a given query in a boolean format suitable for a scientific search. \n
+    Utilize advanced search techniques including truncation, phrase searching, proximity operators, and Boolean operators. \n
+    Ensure to generate a comprehensive but precise set of keywords, not exceeding 6 in total. \n
+    
+    Consider the following steps: \n
+    1. Always translate everything into English. \n
+    1. Break down the query into main concepts. \n
+    2. Identify synonyms and related terms for each concept. \n
+    3. Use truncation to include variations of the keywords. \n
+    4. Combine the keywords using Boolean operators (AND, OR, NOT). \n
+    5. Use phrase searching for multi-word terms where necessary. \n
+    6. Apply proximity operators if relevant. \n
+
+    <|eot_id|><|start_header_id|>user<|end_header_id|> \n
+    QUERY: {query} \n
+    KEYWORDS: \n
+
+    <|start_header_id|>assistant<|end_header_id|> \n
+    """
 )
 
 # Chain
 llm = OllamaFunctions(model="llama3", 
                       format="json", 
-                      temperature=0)
+                      temperature=0.5)
 
 structured_llm = llm.with_structured_output(Keywords)
 chain = prompt | structured_llm

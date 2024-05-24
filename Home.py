@@ -1,13 +1,19 @@
 import nest_asyncio
 import streamlit as st
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
+os.environ["EXA_API_KEY"] = os.getenv("EXA_API_KEY")
 
 nest_asyncio.apply()
 
 st.set_page_config(
-    page_title="Graph Gate",
+    page_title="LLM OS Terminal",
     page_icon=":orange_heart:",
 )
-st.title("LLM OS Terminal")
+st.title("LLM OS Terminal 💻")
 st.markdown("> Built with: [langchain][phidata][llamaindex][ollama][streamlit]")
 
 def main() -> None:
