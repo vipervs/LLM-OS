@@ -72,33 +72,35 @@ if process:
             )
             text_chunks = text_splitter.split_documents(data)
 
-    # Process web URLs
-    if web_urls:
-        urls = web_urls.split("\n")
-        loader = WebBaseLoader(
-            web_paths=urls,
-            bs_kwargs=dict(
-                parse_only=bs4.SoupStrainer(
-                    class_=("post-content", "post-title", "post-header")
-                )
-            ),
-        )
+# Process web URLs
+if web_urls:
+    urls = web_urls.split("\n")
+    try:
+        loader = WebBaseLoader(web_paths=urls)
         web_docs = loader.load()
+        st.write(f"Loaded {len(web_docs)} documents from web URLs")
+    except Exception as e:
+        st.error(f"Failed to load web URLs: {str(e)}")
+    print(f"Web documents content: {web_docs}")
 
-        # Split web documents
-        text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-            chunk_size=200, 
-            chunk_overlap=20)
-        web_splits = text_splitter.split_documents(web_docs)
+    # Split web documents 
+    text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+        chunk_size=500, chunk_overlap=50
+    )
+    web_splits = text_splitter.split_documents(web_docs)
 
     # Combine both sets of documents
     combined_documents = text_chunks + web_splits
+
+    if not combined_documents:
+        st.warning("No documents found. Please upload at least one PDF file or enter at least one valid web URL.")
+        st.stop()
 
     # Summarize the documents to understand their topics
     document_text = " ".join([doc.page_content for doc in combined_documents])
 
     # Truncate the document text to fit within the token limit
-    max_tokens = 8192
+    max_tokens = 8192 
     truncated_document_text = document_text[:max_tokens]
 
     summary_prompt = PromptTemplate(
@@ -110,7 +112,7 @@ if process:
     # Add to vectorDB
     vectorstore = Chroma.from_documents(
         documents=combined_documents,
-        collection_name="rag-chroma",
+        collection_name="rag-chroma", 
         embedding=embeddings,
     )
 
