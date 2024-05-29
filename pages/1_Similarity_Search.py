@@ -174,7 +174,7 @@ def titles_ranked_by_relatedness(query, source):
 
 # Prompt template for keyword generation
 prompt = PromptTemplate.from_template(
-    """<|begin_of_text|><|start_header_id|>system<|end_header_id|>  \n
+    """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
     You are a research assistant specializing in generating precise and effective search queries for scientific databases like PubMed, CINAHL, or Web of Science. 
 
     Given a user query, your task is to craft a comprehensive yet concise boolean search string. 
@@ -196,16 +196,15 @@ prompt = PromptTemplate.from_template(
     4. **Apply advanced techniques:** Utilize phrase searching, truncation, proximity operators, and field tags to refine your search.
     5. **Format for readability:** Present the final search string in a clear and easy-to-understand format.
 
-    <|eot_id|><|start_header_id|>user<|end_header_id|> \n
-    QUERY: {query} \n
-    <|start_header_id|>assistant<|end_header_id|> \n
-    """
+    <|eot_id|><|start_header_id|>user<|end_header_id|>
+    QUERY: {query}
+    <|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
 )
 
 # Chain
 llm = OllamaFunctions(model="llama3", 
                       format="json", 
-                      temperature=0.5)
+                      temperature=0.6)
 
 structured_llm = llm.with_structured_output(Keywords)
 chain = prompt | structured_llm
