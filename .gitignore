@@ -1,6 +1,8 @@
 .envrc
 .direnv
+.temp
 /arxiv
+/adaptiv_rag
 /cse
 /temp
 */.streamlit/secrets.toml

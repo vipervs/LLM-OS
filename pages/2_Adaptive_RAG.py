@@ -1,4 +1,3 @@
-import bs4
 from langchain_community.document_loaders import WebBaseLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
@@ -40,26 +39,19 @@ if process:
         st.warning("Please upload at least one PDF file or enter at least one web URL.")
         st.stop()
 
-    # Initialize variables
     text_chunks = []
     web_splits = []
 
-    # Process PDF files
     if uploaded_files:
-        # Ensure the temp directory exists
-        temp_dir = 'temp'
+        temp_dir = '.temp'
         if not os.path.exists(temp_dir):
             os.makedirs(temp_dir)
 
-        # Process each uploaded file
         for uploaded_file in uploaded_files:
             temp_file_path = os.path.join(temp_dir, uploaded_file.name)
-            
-            # Save the file to disk
             with open(temp_file_path, "wb") as file:
-                file.write(uploaded_file.getbuffer())  # Use getbuffer() for Streamlit's UploadedFile
-            
-            # Load the PDF using PyPDFLoader
+                file.write(uploaded_file.getbuffer())
+
             try:
                 loader = PyPDFLoader(temp_file_path)
                 data = loader.load() 
@@ -68,36 +60,33 @@ if process:
                 st.error(f"Failed to load {uploaded_file.name}: {str(e)}")
 
             text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-                chunk_size=500, chunk_overlap=50
+                chunk_size=800, chunk_overlap=400
             )
             text_chunks = text_splitter.split_documents(data)
 
-# Process web URLs
-if web_urls:
-    urls = web_urls.split("\n")
-    try:
-        loader = WebBaseLoader(web_paths=urls)
-        web_docs = loader.load()
-        st.write(f"Loaded {len(web_docs)} documents from web URLs")
-    except Exception as e:
-        st.error(f"Failed to load web URLs: {str(e)}")
-    print(f"Web documents content: {web_docs}")
+    if web_urls:
+        urls = web_urls.split("\n")
+        try:
+            loader = WebBaseLoader(web_paths=urls)
+            web_docs = loader.load()
+            st.write(f"Loaded {len(web_docs)} documents from web URLs")
+        except Exception as e:
+            st.error(f"Failed to load web URLs: {str(e)}")
 
-    # Split web documents 
-    text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-        chunk_size=500, chunk_overlap=50
-    )
-    web_splits = text_splitter.split_documents(web_docs)
+        text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+            chunk_size=800, chunk_overlap=400
+        )
+        web_splits = text_splitter.split_documents(web_docs)
 
-    # Combine both sets of documents
-    combined_documents = text_chunks + web_splits
+    combined_chunks = text_chunks + web_splits
+    st.write(f"Total number of chunks: {len(combined_chunks)}")
 
-    if not combined_documents:
+    if not combined_chunks:
         st.warning("No documents found. Please upload at least one PDF file or enter at least one valid web URL.")
         st.stop()
 
     # Summarize the documents to understand their topics
-    document_text = " ".join([doc.page_content for doc in combined_documents])
+    document_text = " ".join([doc.page_content for doc in combined_chunks])
 
     # Truncate the document text to fit within the token limit
     max_tokens = 8192 
@@ -111,7 +100,7 @@ if web_urls:
 
     # Add to vectorDB
     vectorstore = Chroma.from_documents(
-        documents=combined_documents,
+        documents=combined_chunks,
         collection_name="rag-chroma", 
         embedding=embeddings,
     )
@@ -149,11 +138,11 @@ if web_urls:
     retrieval_grader = prompt | llm | JsonOutputParser()
     docs = retriever.get_relevant_documents(question)
     doc_txt = docs[1].page_content
-    st.write("_Question is relevant to document:_")
-    st.write(retrieval_grader.invoke({"question": question, "document": doc_txt}))
+    #st.write("_Question is relevant to document:_")
+    #st.write(retrieval_grader.invoke({"question": question, "document": doc_txt}))
 
     ### Generate
-    prompt = hub.pull("rlm/rag-prompt")
+    prompt = hub.pull("rlm/rag-prompt-llama3")
 
     # Post-processing
     def format_docs(docs):
@@ -181,8 +170,8 @@ if web_urls:
     )
 
     hallucination_grader = prompt | llm | JsonOutputParser()
-    st.write("_Answer is grounded:_")
-    st.write(hallucination_grader.invoke({"documents": docs, "generation": generation}))
+    #st.write("_Answer is grounded:_")
+    #st.write(hallucination_grader.invoke({"documents": docs, "generation": generation}))
 
     ### Answer Grader 
 
@@ -200,16 +189,17 @@ if web_urls:
     )
 
     answer_grader = prompt | llm | JsonOutputParser()
-    st.write("_Answer is useful to resolve question:_")
-    st.write(answer_grader.invoke({"question": question,"generation": generation}))
+    #st.write("_Answer is useful to resolve question:_")
+    #st.write(answer_grader.invoke({"question": question,"generation": generation}))
 
     ### Question Re-writer
 
     # Prompt 
     re_write_prompt = PromptTemplate(
-        template="""You a question re-writer that converts an input question to a better version that is optimized \n 
-        for vectorstore retrieval. Look at the initial and formulate an improved question. \n
-        Here is the initial question: \n\n {question}. Improved question with no preamble or explanation.: \n """,
+        template="""You a question re-writer that converts an input question to a better version that is optimized
+        for vectorstore retrieval. Look at the initial and formulate an improved question.
+        Here is the initial question: \n\n {question}. \n
+        Improved question with no preamble or explanation: \n""",
         input_variables=["question"],
     )
 
@@ -221,9 +211,9 @@ if web_urls:
         Represents the state of our graph.
 
         Attributes:
-            question: question
+            question: Users question
             generation: LLM generation
-            documents: list of documents 
+            documents: List of documents 
         """
         question : str
         generation : str
@@ -370,16 +360,6 @@ if web_urls:
         return None
 
     def decide_to_generate(state):
-        """
-        Determines whether to generate an answer, or re-generate a question.
-
-        Args:
-            state (dict): The current graph state
-
-        Returns:
-            str: Binary decision for next node to call
-        """
-
         print("---ASSESS GRADED DOCUMENTS---")
         filtered_documents = state["documents"]
 
