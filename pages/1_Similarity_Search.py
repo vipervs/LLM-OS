@@ -7,10 +7,10 @@ from csv import writer
 from scipy import spatial
 from glob import glob
 import requests
-import ollama
 from langchain_core.prompts import PromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_experimental.llms.ollama_functions import OllamaFunctions
+from langchain_community.embeddings import OllamaEmbeddings
 
 # Pydantic Schema for structured response
 class Keywords(BaseModel):
@@ -29,21 +29,12 @@ def relatedness_function(a, b):
 def embedding_request(text):
     print(f"Requesting embedding for: {text}")
     try:
-        response = ollama.embeddings(model='nomic-embed-text:latest', prompt=text)
+        embeddings = OllamaEmbeddings(model="snowflake-arctic-embed:latest")
+        embedding = embeddings.embed_query(text)
     except Exception as e:
         print(f"Error requesting embedding: {e}")
         return None
-
-    if isinstance(response, list):
-        if isinstance(response[0], dict):
-            embedding = response[0].get('embedding')
-        else:
-            embedding = response[0]
-    elif isinstance(response, dict):
-        embedding = response.get('embedding')
-    else:
-        raise ValueError("Unexpected response format from ollama.embeddings")
-    #print(f"Ollama API response: {response}")
+    print(f"Ollama API response: {response}")
     return embedding
 
 # Enhanced arXiv search function with error handling
