@@ -29,6 +29,8 @@ def arxiv_search(query, embedding_request):
         df = pd.DataFrame(results)
         df['relatedness_score'] = df['embedding'].apply(lambda x: 1 - spatial.distance.cosine(embedding_request(query), x))
         df = df.sort_values('relatedness_score', ascending=False)
+        os.makedirs('.arxiv', exist_ok=True)
+        os.makedirs('.arxiv', exist_ok=True)
         df[['title', 'summary', 'published', 'pdf_url', 'relatedness_score']].to_csv(f'.arxiv/{query}.csv', index=False, header=False)
         return df.to_dict('records')
     except Exception as e:
@@ -65,6 +67,8 @@ def google_custom_search(query, embedding_request):
         df = pd.DataFrame(results)  
         df['relatedness_score'] = df['embedding'].apply(lambda x: 1 - spatial.distance.cosine(embedding_request(query), x))
         df = df.sort_values('relatedness_score', ascending=False)
+        os.makedirs('.cse', exist_ok=True)
+        os.makedirs('.cse', exist_ok=True)
         df[['title', 'snippet', 'link', 'relatedness_score']].to_csv(f'.cse/{query}.csv', index=False, header=False)
         return df.to_dict('records')
     except Exception as e:
