@@ -10,10 +10,10 @@ os.environ["EXA_API_KEY"] = os.getenv("EXA_API_KEY")
 nest_asyncio.apply()
 
 st.set_page_config(
-    page_title="LLM OS Terminal",
-    page_icon=":orange_heart:",
+    page_title="PrivyLens",
+    page_icon=":mag:",
 )
-st.title("LLM OS Terminal 💻")
+st.title("PrivyLens 🔍")
 st.markdown("> Built with: [langchain][phidata][llamaindex][ollama][streamlit]")
 
 def main() -> None:

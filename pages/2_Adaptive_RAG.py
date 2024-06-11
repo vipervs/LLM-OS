@@ -21,7 +21,7 @@ embeddings = OllamaEmbeddings(model="nomic-embed-text:latest")
 web_search_tool = ExaSearchRetriever(k=3, text_contents_options=TextContentsOptions(max_length=200))
 
 # Streamlit
-st.title("Adaptive RAG 🧠🔄📚")
+st.title("PrivyLens Adaptive RAG 🔍🧠🔄")
 # Create two columns with a ratio of 2:1
 col1, col2 = st.columns([2, 1])
 
