@@ -14,10 +14,10 @@ embedding = OllamaEmbeddings(model="snowflake-arctic-embed:latest")
 web_search_tool = TavilySearchResults(k=3)
 
 class GraphState(TypedDict):
-    question : str
-    generation : str
-    summary : str
-    documents : List[str]
+    question: str
+    generation: str
+    summary: str
+    documents: List[Document]
 
 st.title("Adaptive RAG 🧠🔄📚")
 col1, col2 = st.columns([2, 1])
