@@ -10,8 +10,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Initialize OllamaFunctions with your preferred model and format
-#llm = OllamaFunctions(model="llama3", format="json", temperature=0)
-llm = ChatGroq(temperature=0, model_name="llama3-8b-8192")
+llm = OllamaFunctions(model="qwen2", format="json", temperature=0)
+#llm = ChatGroq(temperature=0, model_name="llama3-8b-8192")
 
 class SummarizeText(BaseModel):
     summary: str = Field(description="Summarize the given text.")
