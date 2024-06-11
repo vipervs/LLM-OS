@@ -26,139 +26,19 @@ def relatedness_function(a, b):
     return 1 - spatial.distance.cosine(a, b)
 
 # Function for making an embedding request with error handling
-def embedding_request(text):
+def get_embedding(text):
     print(f"Requesting embedding for: {text}")
     try:
         embeddings = OllamaEmbeddings(model="snowflake-arctic-embed:latest")
-        embedding = embeddings.embed_query(text)
+        return embeddings.embed_query(text)
     except Exception as e:
         print(f"Error requesting embedding: {e}")
         return None
-    print(f"Ollama API response: {response}")
-    return embedding
 
 # Enhanced arXiv search function with error handling
-def arxiv_search(query):
-    if not os.path.exists('arxiv'):
-        os.makedirs('arxiv')
+from search import arxiv_search
 
-    try:
-        client = arxiv.Client()
-        search = arxiv.Search(
-            query=query,
-            max_results=10
-        )
-    except Exception as e:
-        print(f"Error initializing arXiv client or search: {e}")
-        return []
-
-    result_list = []
-
-    try:
-        with open(f"arxiv/{query}.csv", "w", newline='') as f_object:
-            writer_object = writer(f_object)
-            query_embedding = embedding_request(query)
-
-            for result in client.results(search):
-                arxiv_embedding = embedding_request(result.summary)
-                if arxiv_embedding is None:
-                    print(f"Skipping result due to embedding error: {result.summary}")
-                    continue
-
-                relatedness_score = relatedness_function(query_embedding, arxiv_embedding)
-
-                result_dict = {
-                    "title": result.title,
-                    "summary": result.summary,
-                    "article_url": [x.href for x in result.links][0],
-                    "pdf_url": [x.href for x in result.links][1],
-                    "published": result.published.strftime("%Y-%m-%d"),
-                    "relatedness_score": relatedness_score
-                }
-
-                result_list.append(result_dict)
-                writer_object.writerow([
-                    result.title,
-                    result.summary,
-                    result_dict["published"],
-                    result_dict["pdf_url"],
-                    relatedness_score
-                ])
-
-                print(f"Result added: {result_dict}")
-
-    except Exception as e:
-        print(f"Error processing search results: {e}")
-        return []
-
-    if not result_list:
-        print("No search results found on ArXiv.")
-        return []
-    
-    result_list.sort(key=lambda x: x['relatedness_score'], reverse=True)
-    
-    with open(f"arxiv/{query}.csv", "w", newline='') as f_object:
-        writer_object = writer(f_object)
-        for result in result_list:
-            writer_object.writerow([
-                result["title"],
-                result["summary"],
-                result["published"],
-                result["pdf_url"],
-                result["relatedness_score"]
-            ])
-    
-    return result_list
-
-def google_custom_search(query):
-    if not os.path.exists('cse'):
-        os.makedirs('cse')
-
-    api_url = "https://www.googleapis.com/customsearch/v1"
-    params = {
-        'q': query,
-        'key': os.getenv('GOOGLE_CSE_KEY'),
-        'cx': os.getenv('GOOGLE_CSE_ID')
-    }
-    headers = {'Accept': 'application/json'}
-    response = requests.get(api_url, params=params, headers=headers)
-    response.raise_for_status()
-    json_data = response.json()
-    items = json_data.get("items", [])
-    results = []
-    query_embedding = embedding_request(query)
-
-    for item in items:
-        title = item["title"]
-        link = item["link"]
-        snippet = item.get("snippet", "")
-
-        # Calculate relatedness
-        text_for_embedding = f"{title} {snippet}"
-        cse_embedding = embedding_request(text_for_embedding)
-        relatedness_score = relatedness_function(query_embedding, cse_embedding)
-
-        results.append({
-            "title": title,
-            "link": link,
-            "snippet": snippet,
-            "relatedness_score": relatedness_score
-        })
-
-    if not results:
-        print("No search results found on Google Custom Search.")
-        return []
-    
-    # Sort results by relatedness_score in descending order
-    sorted_results = sorted(results, key=lambda x: x['relatedness_score'], reverse=True)
-
-    # Write sorted results to csv
-    with open(f'cse/{query}.csv', "w") as f_object:
-        csv_writer = writer(f_object)
-        for result in sorted_results:
-            csv_writer.writerow([result['title'], result['snippet'], result['link'], result['relatedness_score']])
-    
-    return sorted_results
+from cse_search import google_custom_search
 
 # Function to rank titles based on relatedness
 def titles_ranked_by_relatedness(query, source):
@@ -226,35 +106,33 @@ with st.form('search_form'):
         response = chain.invoke({"query": query})
         keywords = response.keywords
         print(f"Generated Keywords: {keywords}")
-        if search_engine == "arXiv":
-            st.header(f"📚 ArXiv Results: {keywords}")
-            with st.spinner("Searching arXiv Database..."):
-                results = arxiv_search(keywords)
-            if not results:
-                st.warning("No search results found on ArXiv.")
+        st.header(f"📚 Search Results: {keywords}")
+        with st.spinner(f"Searching {search_engine}..."):
+            if search_engine == "arXiv":
+                results = arxiv_search(keywords, get_embedding)
+            elif search_engine == "CSE":
+                results = google_custom_search(keywords, get_embedding)
             else:
-                for i, result in enumerate(results, start=1):
+                st.error(f"Unknown search engine: {search_engine}")
+                results = []
+        
+        if not results:
+            st.warning(f"No search results found on {search_engine}.")
+        else:
+            for i, result in enumerate(results, start=1):
+                if search_engine == "arXiv":
                     title, summary, published, url, score = result['title'], result['summary'], result['published'], result['pdf_url'], result['relatedness_score']
                     st.subheader(f"Result {i}: {title}")
                     st.write(f"Summary: {summary}")
                     st.write(f"Published: {published}")
                     st.write(f"URL: {url}")
-                    st.write(f"Relatedness Score: {score:.2f}")
-                    st.write("---")
-        elif search_engine == "CSE":
-            st.header(f"📚 Google CSE Results: {keywords}")
-            with st.spinner("Searching Google CSE..."):
-                results = google_custom_search(keywords)
-            if not results:
-                st.warning("No search results found on Google Custom Search.")
-            else:
-                for i, result in enumerate(results, start=1):
+                elif search_engine == "CSE":  
                     title, snippet, url, score = result['title'], result['snippet'], result['link'], result['relatedness_score']
                     st.subheader(f"Result {i}: {title}")
                     st.write(f"Snippet: {snippet}")
                     st.write(f"URL: {url}")
-                    st.write(f"Relatedness Score: {score:.2f}")
-                    st.write("---")
+                st.write(f"Relatedness Score: {score:.2f}")
+                st.write("---")
 
 # Sidebar sections
 st.sidebar.header("Past Searches 📚")
