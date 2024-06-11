@@ -10,7 +10,7 @@ import requests
 from langchain_core.prompts import PromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_experimental.llms.ollama_functions import OllamaFunctions
-from langchain_community.embeddings import OllamaEmbeddings
+from chains import get_embedding
 
 # Pydantic Schema for structured response
 class Keywords(BaseModel):
