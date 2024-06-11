@@ -91,7 +91,10 @@ def arxiv_search(query):
         print(f"Error processing search results: {e}")
         return []
 
-    result_list.sort(key=lambda x: x['relatedness_score'], reverse=True)
+    if not result_list:
+        print("No search results found on ArXiv.")
+    else:
+        result_list.sort(key=lambda x: x['relatedness_score'], reverse=True)
     return result_list
 
 def google_custom_search(query):
@@ -210,14 +213,17 @@ with st.form('search_form'):
             st.header(f"📚 ArXiv Results: {keywords}")
             with st.spinner("Searching arXiv Database..."):
                 results = arxiv_search(keywords)
-            for i, result in enumerate(results, start=1):
-                title, summary, published, url, score = result['title'], result['summary'], result['published'], result['pdf_url'], result['relatedness_score']
-                st.subheader(f"Result {i}: {title}")
-                st.write(f"Summary: {summary}")
-                st.write(f"Published: {published}")
-                st.write(f"URL: {url}")
-                st.write(f"Relatedness Score: {score:.2f}")
-                st.write("---")
+            if not results:
+                st.write("No search results found on ArXiv.")
+            else:
+                for i, result in enumerate(results, start=1):
+                    title, summary, published, url, score = result['title'], result['summary'], result['published'], result['pdf_url'], result['relatedness_score']
+                    st.subheader(f"Result {i}: {title}")
+                    st.write(f"Summary: {summary}")
+                    st.write(f"Published: {published}")
+                    st.write(f"URL: {url}")
+                    st.write(f"Relatedness Score: {score:.2f}")
+                    st.write("---")
         elif search_engine == "CSE":
             st.header(f"📚 Google CSE Results: {keywords}")
             with st.spinner("Searching Google CSE..."):
