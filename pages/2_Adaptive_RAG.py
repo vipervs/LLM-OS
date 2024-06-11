@@ -16,7 +16,6 @@ web_search_tool = TavilySearchResults(k=3)
 class GraphState(TypedDict):
     question: str
     generation: str
-    summary: str
     documents: List[Document]
 
 st.title("Adaptive RAG 🧠🔄📚")
@@ -212,7 +211,7 @@ if process:
     workflow = StateGraph(GraphState)
 
     # Define the nodes
-    workflow.add_node("summarize", summarize)
+    workflow.add_node("summarize_and_route", summarize_and_route)
     workflow.add_node("web_search", web_search)
     workflow.add_node("retrieve", retrieve) 
     workflow.add_node("grade_documents", grade_documents) 
