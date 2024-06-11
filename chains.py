@@ -46,7 +46,7 @@ summary_prompt = ChatPromptTemplate.from_messages(
         ("human", "Text: \n\n {text}"),
     ]
 )
-summary_chain = summary_prompt | structured_llm_summarizer
+summary_chain = summary_prompt | structured_llm_summarizer | (lambda x: {"summary": x.summary})
 
 ## Route
 structured_llm_router = llm.with_structured_output(RouteQuery)
