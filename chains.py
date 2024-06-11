@@ -13,9 +13,6 @@ load_dotenv()
 llm = OllamaFunctions(model="qwen2", format="json", temperature=0)
 #llm = ChatGroq(temperature=0, model_name="llama3-8b-8192")
 
-class SummarizeText(BaseModel):
-    summary: dict = Field(description="Summarize the given text.")
-
 class RouteQuery(BaseModel):
     datasource: Literal["vectorstore", "websearch"] = Field(
         ...,
@@ -38,7 +35,6 @@ class GradeHallucinations(BaseModel):
     )
 
 ## Summarize
-structured_llm_summarizer = llm.with_structured_output(SummarizeText)
 system_summary = """You are an expert summarizer. Summarize the following text to understand its main topics."""
 summary_prompt = ChatPromptTemplate.from_messages(
     [
@@ -46,7 +42,7 @@ summary_prompt = ChatPromptTemplate.from_messages(
         ("human", "Text: \n\n {text}"),
     ]
 )
-summary_chain = summary_prompt | structured_llm_summarizer
+summary_chain = summary_prompt | llm
 
 ## Route
 structured_llm_router = llm.with_structured_output(RouteQuery)

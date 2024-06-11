@@ -14,9 +14,10 @@ embedding = OllamaEmbeddings(model="snowflake-arctic-embed:latest")
 web_search_tool = TavilySearchResults(k=3)
 
 class GraphState(TypedDict):
-    question: str
-    generation: str
-    documents: List[Document]
+    question : str
+    generation : str
+    summary : str
+    documents : List[str]
 
 st.title("Adaptive RAG 🧠🔄📚")
 col1, col2 = st.columns([2, 1])
@@ -142,17 +143,10 @@ if process:
         documents = state["documents"]
         if documents:
             document_text = " ".join([doc.page_content for doc in documents])
-            max_tokens = 8192  # Adjust this based on your model's token limit
+            max_tokens = 8192
             truncated_document_text = document_text[:max_tokens]
-            try:
-                summary_chain_result = summary_chain.invoke({"text": truncated_document_text})
-                print(f"summary_chain_result: {summary_chain_result}")
-                summary = summary_chain_result["summary"]
-                return {"summary": summary}
-            except KeyError as e:
-                print(f"KeyError in summary_chain response: {e}")
-                print(f"summary_chain_result: {summary_chain_result}")
-                return {"summary": "Error: Unable to generate summary"}
+            summary = summary_chain.invoke({"text": truncated_document_text})
+            return {"summary": summary}
         else:
             raise ValueError("No documents found to summarize.")
 
@@ -211,7 +205,7 @@ if process:
     workflow = StateGraph(GraphState)
 
     # Define the nodes
-    workflow.add_node("summarize_and_route", summarize_and_route)
+    workflow.add_node("summarize", summarize)
     workflow.add_node("web_search", web_search)
     workflow.add_node("retrieve", retrieve) 
     workflow.add_node("grade_documents", grade_documents) 
@@ -219,10 +213,10 @@ if process:
     workflow.add_node("transform_query", transform_query)
 
     # Build graph
-    workflow.set_entry_point("summarize_and_route")
+    workflow.set_entry_point("summarize")
     workflow.add_conditional_edges(
-        "summarize_and_route",
-        lambda state: state,
+        "summarize",
+        route_question,
         {
             "websearch": "web_search",
             "vectorstore": "retrieve",
