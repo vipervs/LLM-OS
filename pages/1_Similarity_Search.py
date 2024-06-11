@@ -141,6 +141,8 @@ def google_custom_search(query):
         for result in sorted_results:
             csv_writer.writerow([result['title'], result['snippet'], result['link'], result['relatedness_score']])
     
+    if not sorted_results:
+        print("No search results found on Google Custom Search.")
     return sorted_results
 
 # Function to rank titles based on relatedness
@@ -228,13 +230,16 @@ with st.form('search_form'):
             st.header(f"📚 Google CSE Results: {keywords}")
             with st.spinner("Searching Google CSE..."):
                 results = google_custom_search(keywords)
-            for i, result in enumerate(results, start=1):
-                title, snippet, url, score = result['title'], result['snippet'], result['link'], result['relatedness_score']
-                st.subheader(f"Result {i}: {title}")
-                st.write(f"Snippet: {snippet}")
-                st.write(f"URL: {url}")
-                st.write(f"Relatedness Score: {score:.2f}")
-                st.write("---")
+            if not results:
+                st.write("No search results found on Google Custom Search.")
+            else:
+                for i, result in enumerate(results, start=1):
+                    title, snippet, url, score = result['title'], result['snippet'], result['link'], result['relatedness_score']
+                    st.subheader(f"Result {i}: {title}")
+                    st.write(f"Snippet: {snippet}")
+                    st.write(f"URL: {url}")
+                    st.write(f"Relatedness Score: {score:.2f}")
+                    st.write("---")
 
 # Sidebar sections
 st.sidebar.header("Past Searches 📚")
