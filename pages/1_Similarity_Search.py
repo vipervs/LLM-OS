@@ -25,20 +25,10 @@ search_engine = st.selectbox("Select Search Engine:", ["arXiv", "CSE"])
 def relatedness_function(a, b):
     return 1 - spatial.distance.cosine(a, b)
 
-# Function for making an embedding request with error handling
-def get_embedding(text):
-    print(f"Requesting embedding for: {text}")
-    try:
-        embeddings = OllamaEmbeddings(model="snowflake-arctic-embed:latest")
-        return embeddings.embed_query(text)
-    except Exception as e:
-        print(f"Error requesting embedding: {e}")
-        return None
 
-# Enhanced arXiv search function with error handling
 from search import arxiv_search
-
 from cse_search import google_custom_search
+from embedding import get_embedding
 
 # Function to rank titles based on relatedness
 def titles_ranked_by_relatedness(query, source):
@@ -108,29 +98,26 @@ with st.form('search_form'):
         print(f"Generated Keywords: {keywords}")
         st.header(f"📚 Search Results: {keywords}")
         with st.spinner(f"Searching {search_engine}..."):
-            if search_engine == "arXiv":
-                results = arxiv_search(keywords, get_embedding)
-            elif search_engine == "CSE":
-                results = google_custom_search(keywords, get_embedding)
-            else:
-                st.error(f"Unknown search engine: {search_engine}")
-                results = []
+            search_function = arxiv_search if search_engine == "arXiv" else google_custom_search
+            results = search_function(keywords, get_embedding)
         
         if not results:
             st.warning(f"No search results found on {search_engine}.")
         else:
             for i, result in enumerate(results, start=1):
+                title = result['title'] 
+                url = result['pdf_url'] if search_engine == "arXiv" else result['link']
+                score = result['relatedness_score']
+                
+                st.subheader(f"Result {i}: {title}")
+                
                 if search_engine == "arXiv":
-                    title, summary, published, url, score = result['title'], result['summary'], result['published'], result['pdf_url'], result['relatedness_score']
-                    st.subheader(f"Result {i}: {title}")
-                    st.write(f"Summary: {summary}")
-                    st.write(f"Published: {published}")
-                    st.write(f"URL: {url}")
-                elif search_engine == "CSE":  
-                    title, snippet, url, score = result['title'], result['snippet'], result['link'], result['relatedness_score']
-                    st.subheader(f"Result {i}: {title}")
-                    st.write(f"Snippet: {snippet}")
-                    st.write(f"URL: {url}")
+                    st.write(f"Summary: {result['summary']}")
+                    st.write(f"Published: {result['published']}")
+                else:
+                    st.write(f"Snippet: {result['snippet']}")
+                
+                st.write(f"URL: {url}")
                 st.write(f"Relatedness Score: {score:.2f}")
                 st.write("---")
 
