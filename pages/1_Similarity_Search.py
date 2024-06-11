@@ -1,16 +1,15 @@
 import os
-import arxiv
 import pandas as pd
 import json
 import streamlit as st
-from csv import writer
 from scipy import spatial
 from glob import glob
-import requests
 from langchain_core.prompts import PromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_experimental.llms.ollama_functions import OllamaFunctions
-from chains import get_embedding
+from langchain_community.embeddings import OllamaEmbeddings
+from search import arxiv_search
+from search import google_custom_search
 
 # Pydantic Schema for structured response
 class Keywords(BaseModel):
@@ -25,8 +24,15 @@ search_engine = st.selectbox("Select Search Engine:", ["arXiv", "CSE"])
 def relatedness_function(a, b):
     return 1 - spatial.distance.cosine(a, b)
 
-
-from chains import get_embedding
+# Function for making an embedding request with error handling
+def get_embedding(text):
+    print(f"Requesting embedding for: {text}")
+    try:
+        embeddings = OllamaEmbeddings(model="snowflake-arctic-embed:latest")
+        return embeddings.embed_query(text)
+    except Exception as e:
+        print(f"Error requesting embedding: {e}")
+        return None
 
 # Function to rank titles based on relatedness
 def titles_ranked_by_relatedness(query, source):
@@ -96,26 +102,29 @@ with st.form('search_form'):
         print(f"Generated Keywords: {keywords}")
         st.header(f"📚 Search Results: {keywords}")
         with st.spinner(f"Searching {search_engine}..."):
-            search_function = arxiv_search if search_engine == "arXiv" else google_custom_search
-            results = search_function(keywords, get_embedding)
+            if search_engine == "arXiv":
+                results = arxiv_search(keywords, get_embedding)
+            elif search_engine == "CSE":
+                results = google_custom_search(keywords, get_embedding)
+            else:
+                st.error(f"Unknown search engine: {search_engine}")
+                results = []
         
         if not results:
             st.warning(f"No search results found on {search_engine}.")
         else:
             for i, result in enumerate(results, start=1):
-                title = result['title'] 
-                url = result['pdf_url'] if search_engine == "arXiv" else result['link']
-                score = result['relatedness_score']
-                
-                st.subheader(f"Result {i}: {title}")
-                
                 if search_engine == "arXiv":
-                    st.write(f"Summary: {result['summary']}")
-                    st.write(f"Published: {result['published']}")
-                else:
-                    st.write(f"Snippet: {result['snippet']}")
-                
-                st.write(f"URL: {url}")
+                    title, summary, published, url, score = result['title'], result['summary'], result['published'], result['pdf_url'], result['relatedness_score']
+                    st.subheader(f"Result {i}: {title}")
+                    st.write(f"Summary: {summary}")
+                    st.write(f"Published: {published}")
+                    st.write(f"URL: {url}")
+                elif search_engine == "CSE":  
+                    title, snippet, url, score = result['title'], result['snippet'], result['link'], result['relatedness_score']
+                    st.subheader(f"Result {i}: {title}")
+                    st.write(f"Snippet: {snippet}")
+                    st.write(f"URL: {url}")
                 st.write(f"Relatedness Score: {score:.2f}")
                 st.write("---")
 

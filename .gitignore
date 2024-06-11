@@ -1,6 +1,7 @@
 .envrc
 .direnv
 .temp
+/chroma
 /arxiv
 /adaptiv_rag
 /cse
