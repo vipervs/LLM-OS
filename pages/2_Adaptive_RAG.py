@@ -145,8 +145,15 @@ if process:
             document_text = " ".join([doc.page_content for doc in documents])
             max_tokens = 8192  # Adjust this based on your model's token limit
             truncated_document_text = document_text[:max_tokens]
-            summary = summary_chain.invoke({"text": truncated_document_text})
-            return {"summary": summary}
+            try:
+                summary = summary_chain.invoke({"text": truncated_document_text})
+                return {"summary": summary}
+            except KeyError as e:
+                if "tool" in str(e):
+                    print("No tool found in summary_chain response. Returning empty dictionary.")
+                    return {}
+                else:
+                    raise
         else:
             raise ValueError("No documents found to summarize.")
 
