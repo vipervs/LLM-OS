@@ -1,3 +1,4 @@
+import os
 import arxiv
 import requests
 import pandas as pd
@@ -39,8 +40,8 @@ def google_custom_search(query, embedding_request):
     try:
         url = "https://www.googleapis.com/customsearch/v1"
         params = {
-            "key": "YOUR_API_KEY",
-            "cx": "YOUR_SEARCH_ENGINE_ID", 
+            "key": os.getenv('GOOGLE_CSE_KEY'),
+            "cx": os.getenv('GOOGLE_CSE_ID'),
             "q": query
         }
         response = requests.get(url, params=params)
