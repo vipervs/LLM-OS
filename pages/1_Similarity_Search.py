@@ -42,7 +42,7 @@ from cse_search import google_custom_search
 
 # Function to rank titles based on relatedness
 def titles_ranked_by_relatedness(query, source):
-    query_embedding = embedding_request(query)
+    query_embedding = get_embedding(query)
 
     if source == "arXiv":
         df = pd.read_csv(f'arxiv/{query}.csv', header=None)  
