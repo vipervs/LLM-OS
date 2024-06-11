@@ -43,9 +43,11 @@ def google_custom_search(query, embedding_request):
             "cx": "YOUR_SEARCH_ENGINE_ID", 
             "q": query
         }
-        data = requests.get(url, params=params).json()
+        response = requests.get(url, params=params)
+        data = response.json()
         results = []
-        for item in data['items']:
+        if 'items' in data:
+            for item in data['items']:
             title = item['title']
             snippet = item['snippet']
             link = item['link']
@@ -56,6 +58,9 @@ def google_custom_search(query, embedding_request):
                 "link": link,
                 "embedding": embedding
             })
+        else:
+            print(f"No 'items' found in CSE response. Full response: {data}")
+        
         df = pd.DataFrame(results)  
         df['relatedness_score'] = df['embedding'].apply(lambda x: 1 - spatial.distance.cosine(embedding_request(query), x))
         df = df.sort_values('relatedness_score', ascending=False)
