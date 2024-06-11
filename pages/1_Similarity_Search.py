@@ -151,12 +151,12 @@ for source, searches in searches_by_source.items():
             col1, col2 = st.columns([8, 2])
             with col1:
                 if st.checkbox(search_label, key=search_label):
-                    if folder == 'arxiv':
+                    if folder == '.arxiv':
                         query = file_name.replace('.csv', '')
                         # Trigger a reload by updating a Streamlit session state variable
                         if 'load_arxiv_results' not in st.session_state:
                             st.session_state['load_arxiv_results'] = query
-                    elif folder == 'cse':
+                    elif folder == '.cse':
                         query = file_name.replace('.csv', '')
                         # Trigger a reload for CSE
                         if 'load_cse_results' not in st.session_state:
