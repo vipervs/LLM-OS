@@ -153,7 +153,7 @@ if process:
             except KeyError as e:
                 print(f"KeyError in summary_chain response: {e}")
                 print(f"summary_chain_result: {summary_chain_result}")
-                raise
+                return {"summary": "Error: Unable to generate summary"}
         else:
             raise ValueError("No documents found to summarize.")
 
