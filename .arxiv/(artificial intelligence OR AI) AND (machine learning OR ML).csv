@@ -1,0 +1,113 @@
+Practical Statistical Considerations for the Clinical Validation of AI/ML-enabled Medical Diagnostic Devices,"Artificial Intelligence (AI) and Machine-Learning (ML) models have been
+increasingly used in medical products, such as medical device software. General
+considerations on the statistical aspects for the evaluation of AI/ML-enabled
+medical diagnostic devices are discussed in this paper. We also provide
+relevant academic references and note good practices in addressing various
+statistical challenges in the clinical validation of AI/ML-enabled medical
+devices in the context of their intended use.",2023-03-02,http://arxiv.org/pdf/2303.05399v1,0.6221065579842383
+Forecasting AI Progress: Evidence from a Survey of Machine Learning Researchers,"Advances in artificial intelligence (AI) are shaping modern life, from
+transportation, health care, science, finance, to national defense. Forecasts
+of AI development could help improve policy- and decision-making. We report the
+results from a large survey of AI and machine learning (ML) researchers on
+their beliefs about progress in AI. The survey, fielded in late 2019, elicited
+forecasts for near-term AI development milestones and high- or human-level
+machine intelligence, defined as when machines are able to accomplish every or
+almost every task humans are able to do currently. As part of this study, we
+re-contacted respondents from a highly-cited study by Grace et al. (2018), in
+which AI/ML researchers gave forecasts about high-level machine intelligence
+and near-term milestones in AI development. Results from our 2019 survey show
+that, in aggregate, AI/ML researchers surveyed placed a 50% likelihood of
+human-level machine intelligence being achieved by 2060. The results show
+researchers newly contacted in 2019 expressed similar beliefs about the
+progress of advanced AI as respondents in the Grace et al. (2018) survey. For
+the recontacted participants from the Grace et al. (2018) study, the aggregate
+forecast for a 50% likelihood of high-level machine intelligence shifted from
+2062 to 2076, although this change is not statistically significant, likely due
+to the small size of our panel sample. Forecasts of several near-term AI
+milestones have reduced in time, suggesting more optimism about AI progress.
+Finally, AI/ML researchers also exhibited significant optimism about how
+human-level machine intelligence will impact society.",2022-06-08,http://arxiv.org/pdf/2206.04132v1,0.60713856474741
+"A Large-Scale, Automated Study of Language Surrounding Artificial Intelligence","This work presents a large-scale analysis of artificial intelligence (AI) and
+machine learning (ML) references within news articles and scientific
+publications between 2011 and 2019. We implement word association measurements
+that automatically identify shifts in language co-occurring with AI/ML and
+quantify the strength of these word associations. Our results highlight the
+evolution of perceptions and definitions around AI/ML and detect emerging
+application areas, models, and systems (e.g., blockchain and cybersecurity).
+Recent small-scale, manual studies have explored AI/ML discourse within the
+general public, the policymaker community, and researcher community, but are
+limited in their scalability and longevity. Our methods provide new views into
+public perceptions and subject-area expert discussions of AI/ML and greatly
+exceed the explanative power of prior work.",2021-02-24,http://arxiv.org/pdf/2102.12516v1,0.6069875606716411
+Confident AI,"In this paper, we propose ""Confident AI"" as a means to designing Artificial
+Intelligence (AI) and Machine Learning (ML) systems with both algorithm and
+user confidence in model predictions and reported results. The 4 basic tenets
+of Confident AI are Repeatability, Believability, Sufficiency, and
+Adaptability. Each of the tenets is used to explore fundamental issues in
+current AI/ML systems and together provide an overall approach to Confident AI.",2022-02-12,http://arxiv.org/pdf/2202.05957v1,0.5889562298853853
+Advancing the Research and Development of Assured Artificial Intelligence and Machine Learning Capabilities,"Artificial intelligence (AI) and machine learning (ML) have become
+increasingly vital in the development of novel defense and intelligence
+capabilities across all domains of warfare. An adversarial AI (A2I) and
+adversarial ML (AML) attack seeks to deceive and manipulate AI/ML models. It is
+imperative that AI/ML models can defend against these attacks. A2I/AML defenses
+will help provide the necessary assurance of these advanced capabilities that
+use AI/ML models. The A2I Working Group (A2IWG) seeks to advance the research
+and development of assured AI/ML capabilities via new A2I/AML defenses by
+fostering a collaborative environment across the U.S. Department of Defense and
+U.S. Intelligence Community. The A2IWG aims to identify specific challenges
+that it can help solve or address more directly, with initial focus on three
+topics: AI Trusted Robustness, AI System Security, and AI/ML Architecture
+Vulnerabilities.",2020-09-24,http://arxiv.org/pdf/2009.13250v1,0.5856910676443232
+Principles for Evaluation of AI/ML Model Performance and Robustness,"The Department of Defense (DoD) has significantly increased its investment in
+the design, evaluation, and deployment of Artificial Intelligence and Machine
+Learning (AI/ML) capabilities to address national security needs. While there
+are numerous AI/ML successes in the academic and commercial sectors, many of
+these systems have also been shown to be brittle and nonrobust. In a complex
+and ever-changing national security environment, it is vital that the DoD
+establish a sound and methodical process to evaluate the performance and
+robustness of AI/ML models before these new capabilities are deployed to the
+field. This paper reviews the AI/ML development process, highlights common best
+practices for AI/ML model evaluation, and makes recommendations to DoD
+evaluators to ensure the deployment of robust AI/ML capabilities for national
+security needs.",2021-07-06,http://arxiv.org/pdf/2107.02868v1,0.5711083278424364
+Measuring AI Systems Beyond Accuracy,"Current test and evaluation (T&E) methods for assessing machine learning (ML)
+system performance often rely on incomplete metrics. Testing is additionally
+often siloed from the other phases of the ML system lifecycle. Research
+investigating cross-domain approaches to ML T&E is needed to drive the state of
+the art forward and to build an Artificial Intelligence (AI) engineering
+discipline. This paper advocates for a robust, integrated approach to testing
+by outlining six key questions for guiding a holistic T&E strategy.",2022-04-07,http://arxiv.org/pdf/2204.04211v1,0.5208546897960301
+CTI4AI: Threat Intelligence Generation and Sharing after Red Teaming AI Models,"As the practicality of Artificial Intelligence (AI) and Machine Learning (ML)
+based techniques grow, there is an ever increasing threat of adversarial
+attacks. There is a need to red team this ecosystem to identify system
+vulnerabilities, potential threats, characterize properties that will enhance
+system robustness, and encourage the creation of effective defenses. A
+secondary need is to share this AI security threat intelligence between
+different stakeholders like, model developers, users, and AI/ML security
+professionals. In this paper, we create and describe a prototype system CTI4AI,
+to overcome the need to methodically identify and share AI/ML specific
+vulnerabilities and threat intelligence.",2022-08-16,http://arxiv.org/pdf/2208.07476v1,0.5125292929956171
+AI/ML for Beam Management in 5G-Advanced,"In beamformed wireless cellular systems such as 5G New Radio (NR) networks,
+beam management (BM) is a crucial operation. In the second phase of 5G NR
+standardization, known as 5G-Advanced, which is being vigorously promoted, the
+key component is the use of artificial intelligence (AI) based on machine
+learning (ML) techniques. AI/ML for BM is selected as a representative use
+case. This article provides an overview of the AI/ML for BM in 5G-Advanced. The
+legacy non-AI and prime AI-enabled BM frameworks are first introduced and
+compared. Then, the main scope of AI/ML for BM is presented, including
+improving accuracy, reducing overhead and latency. Finally, the key challenges
+and open issues in the standardization of AI/ML for BM are discussed,
+especially the design of new protocols for AI-enabled BM. This article provides
+a guideline for the study of AI/ML-based BM standardization.",2023-09-19,http://arxiv.org/pdf/2309.10575v1,0.49737939967585165
+Proceedings of the Robust Artificial Intelligence System Assurance (RAISA) Workshop 2022,"The Robust Artificial Intelligence System Assurance (RAISA) workshop will
+focus on research, development and application of robust artificial
+intelligence (AI) and machine learning (ML) systems. Rather than studying
+robustness with respect to particular ML algorithms, our approach will be to
+explore robustness assurance at the system architecture level, during both
+development and deployment, and within the human-machine teaming context. While
+the research community is converging on robust solutions for individual AI
+models in specific scenarios, the problem of evaluating and assuring the
+robustness of an AI system across its entire life cycle is much more complex.
+Moreover, the operational context in which AI systems are deployed necessitates
+consideration of robustness and its relation to principles of fairness,
+privacy, and explainability.",2022-02-10,http://arxiv.org/pdf/2202.04787v1,0.48242438029502943
