@@ -39,14 +39,14 @@ def titles_ranked_by_relatedness(query, source):
     query_embedding = get_embedding(query)
 
     if source == "arXiv":
-        df = pd.read_csv(f'arxiv/{query}.csv', header=None)  
+        df = pd.read_csv(f'.arxiv/{query}.csv', header=None)  
         strings_and_relatedness = [
             (row[0], row[1], row[2], row[3], relatedness_function(query_embedding, json.loads(row[4]))) 
             for i, row in df.iterrows()
         ]
         strings_and_relatedness.sort(key=lambda x: x[4], reverse=True)
     elif source == "CSE":
-        df = pd.read_csv(f'cse/{query}.csv', header=None)  
+        df = pd.read_csv(f'.cse/{query}.csv', header=None)  
         strings_and_relatedness = [ 
             (row[0], row[1], row[2], relatedness_function(query_embedding, json.loads(row[3]))) 
             for i, row in df.iterrows()
@@ -130,7 +130,7 @@ with st.form('search_form'):
 
 # Sidebar sections
 st.sidebar.header("Past Searches 📚")
-past_searches = glob('arxiv/*.csv') + glob('cse/*.csv')
+past_searches = glob('.arxiv/*.csv') + glob('.cse/*.csv')
 past_searches_with_folder = [(os.path.dirname(file), os.path.basename(file)) for file in past_searches]
 past_search_options = [(folder, file) for folder, file in past_searches_with_folder]
 
@@ -174,7 +174,7 @@ for source, searches in searches_by_source.items():
 # Main window logic to display results based on session state
 if 'load_arxiv_results' in st.session_state:
     query = st.session_state['load_arxiv_results']
-    file_path = os.path.join('arxiv', query + '.csv') 
+    file_path = os.path.join('.arxiv', query + '.csv') 
     try:
         df = pd.read_csv(file_path, header=None)
         df = df.sort_values(by=4, ascending=False)  
@@ -194,7 +194,7 @@ if 'load_arxiv_results' in st.session_state:
 
 if 'load_cse_results' in st.session_state:
     query = st.session_state['load_cse_results']
-    file_path = os.path.join('cse', query + '.csv') 
+    file_path = os.path.join('.cse', query + '.csv') 
     try:
         df = pd.read_csv(file_path, header=None)
         df = df.sort_values(by=3, ascending=False) 
