@@ -48,16 +48,16 @@ def google_custom_search(query, embedding_request):
         results = []
         if 'items' in data:
             for item in data['items']:
-            title = item['title']
-            snippet = item['snippet']
-            link = item['link']
-            embedding = embedding_request(snippet)
-            results.append({
-                "title": title,
-                "snippet": snippet,
-                "link": link,
-                "embedding": embedding
-            })
+                title = item['title']
+                snippet = item['snippet']
+                link = item['link']
+                embedding = embedding_request(snippet)
+                results.append({
+                    "title": title,
+                    "snippet": snippet,
+                    "link": link,
+                    "embedding": embedding
+                })
         else:
             print(f"No 'items' found in CSE response. Full response: {data}")
         
