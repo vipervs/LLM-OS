@@ -26,9 +26,7 @@ def relatedness_function(a, b):
     return 1 - spatial.distance.cosine(a, b)
 
 
-from search import arxiv_search
-from cse_search import google_custom_search
-from embedding import get_embedding
+from chains import get_embedding
 
 # Function to rank titles based on relatedness
 def titles_ranked_by_relatedness(query, source):
