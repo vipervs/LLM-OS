@@ -93,8 +93,21 @@ def arxiv_search(query):
 
     if not result_list:
         print("No search results found on ArXiv.")
-    else:
-        result_list.sort(key=lambda x: x['relatedness_score'], reverse=True)
+        return []
+    
+    result_list.sort(key=lambda x: x['relatedness_score'], reverse=True)
+    
+    with open(f"arxiv/{query}.csv", "w", newline='') as f_object:
+        writer_object = writer(f_object)
+        for result in result_list:
+            writer_object.writerow([
+                result["title"],
+                result["summary"],
+                result["published"],
+                result["pdf_url"],
+                result["relatedness_score"]
+            ])
+    
     return result_list
 
 def google_custom_search(query):
@@ -132,6 +145,10 @@ def google_custom_search(query):
             "relatedness_score": relatedness_score
         })
 
+    if not results:
+        print("No search results found on Google Custom Search.")
+        return []
+    
     # Sort results by relatedness_score in descending order
     sorted_results = sorted(results, key=lambda x: x['relatedness_score'], reverse=True)
 
@@ -141,8 +158,6 @@ def google_custom_search(query):
         for result in sorted_results:
             csv_writer.writerow([result['title'], result['snippet'], result['link'], result['relatedness_score']])
     
-    if not sorted_results:
-        print("No search results found on Google Custom Search.")
     return sorted_results
 
 # Function to rank titles based on relatedness
