@@ -216,7 +216,7 @@ with st.form('search_form'):
             with st.spinner("Searching arXiv Database..."):
                 results = arxiv_search(keywords)
             if not results:
-                st.write("No search results found on ArXiv.")
+                st.warning("No search results found on ArXiv.")
             else:
                 for i, result in enumerate(results, start=1):
                     title, summary, published, url, score = result['title'], result['summary'], result['published'], result['pdf_url'], result['relatedness_score']
@@ -231,7 +231,7 @@ with st.form('search_form'):
             with st.spinner("Searching Google CSE..."):
                 results = google_custom_search(keywords)
             if not results:
-                st.write("No search results found on Google Custom Search.")
+                st.warning("No search results found on Google Custom Search.")
             else:
                 for i, result in enumerate(results, start=1):
                     title, snippet, url, score = result['title'], result['snippet'], result['link'], result['relatedness_score']
