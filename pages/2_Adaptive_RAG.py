@@ -219,10 +219,10 @@ if process:
     workflow.add_node("transform_query", transform_query)
 
     # Build graph
-    workflow.set_entry_point("summarize")
+    workflow.set_entry_point("summarize_and_route")
     workflow.add_conditional_edges(
-        "summarize",
-        route_question,
+        "summarize_and_route",
+        lambda state: state,
         {
             "websearch": "web_search",
             "vectorstore": "retrieve",
