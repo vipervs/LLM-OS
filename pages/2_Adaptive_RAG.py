@@ -148,7 +148,7 @@ if process:
             try:
                 summary_chain_result = summary_chain.invoke({"text": truncated_document_text})
                 print(f"summary_chain_result: {summary_chain_result}")
-                summary = summary_chain_result["tool"]
+                summary = summary_chain_result["summary"]
                 return {"summary": summary}
             except KeyError as e:
                 print(f"KeyError in summary_chain response: {e}")
