@@ -2,16 +2,21 @@ from typing import Literal
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_groq import ChatGroq
+from langchain_core.prompts import PromptTemplate
 from langchain_experimental.llms.ollama_functions import OllamaFunctions
 from langchain_core.runnables import RunnableSequence
 from langchain import hub
 from langchain_core.output_parsers import StrOutputParser
 from dotenv import load_dotenv
+from prometheus_client import Summary
 load_dotenv()
 
 # Initialize OllamaFunctions with your preferred model and format
 llm = OllamaFunctions(model="qwen2", format="json", temperature=0)
 #llm = ChatGroq(temperature=0, model_name="llama3-8b-8192")
+
+class Summary(BaseModel):
+    keywords: str = Field(description="The generated keywords in boolean format")
 
 class RouteQuery(BaseModel):
     datasource: Literal["vectorstore", "websearch"] = Field(
@@ -34,15 +39,15 @@ class GradeHallucinations(BaseModel):
         description="Answer is grounded in the facts, 'yes' or 'no'"
     )
 
-## Summarize
-system_summary = """You are an expert summarizer. Summarize the following text to understand its main topics."""
-summary_prompt = ChatPromptTemplate.from_messages(
-    [
-        ("system", system_summary),
-        ("human", "Text: \n\n {text}"),
-    ]
+prompt = PromptTemplate.from_template(
+    """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+    You are an expert summarizer. Summarize the following text to understand its main topics.
+    <|eot_id|><|start_header_id|>user<|end_header_id|>
+    Text: \n\n {text}
+    <|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
 )
-summary_chain = summary_prompt | llm
+structured_llm = llm.with_structured_output(Summary)
+summary_chain = prompt | structured_llm
 
 ## Route
 structured_llm_router = llm.with_structured_output(RouteQuery)
@@ -111,23 +116,3 @@ rewrite_prompt = ChatPromptTemplate.from_messages(
 )
 
 question_rewriter = rewrite_prompt | llm | StrOutputParser()
-from langchain_community.embeddings import OllamaEmbeddings
-
-def get_embedding(text):
-    print(f"Requesting embedding for: {text}")
-    try:
-        embeddings = OllamaEmbeddings(model="snowflake-arctic-embed:latest")
-        return embeddings.embed_query(text)
-    except Exception as e:
-        print(f"Error requesting embedding: {e}")
-        return None
-from langchain_community.embeddings import OllamaEmbeddings
-
-def get_embedding(text):
-    print(f"Requesting embedding for: {text}")
-    try:
-        embeddings = OllamaEmbeddings(model="snowflake-arctic-embed:latest")
-        return embeddings.embed_query(text)
-    except Exception as e:
-        print(f"Error requesting embedding: {e}")
-        return None

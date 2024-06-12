@@ -15,8 +15,8 @@ from search import google_custom_search
 class Keywords(BaseModel):
     keywords: str = Field(description="The generated keywords in boolean format")
 
-st.set_page_config(page_title="PrivyLens Similarity Search 🔍")
-st.title("PrivyLens Similarity Search 🔍")
+st.set_page_config(page_title="PrivyLens - Similarity Search 🔍")
+st.title("PrivyLens - Similarity Search 🔍")
 
 search_engine = st.selectbox("Select Search Engine:", ["arXiv", "CSE"])
 

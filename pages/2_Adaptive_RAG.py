@@ -19,7 +19,8 @@ class GraphState(TypedDict):
     summary : str
     documents : List[str]
 
-st.title("Adaptive RAG 🧠🔄📚")
+st.set_page_config(page_title="PrivyLens - Adaptive RAG 📚")
+st.title("PrivyLens - Adaptive RAG 📚")
 col1, col2 = st.columns([2, 1])
 
 with col1:
@@ -245,17 +246,6 @@ if process:
 
     # Compile the graph
     app = workflow.compile()
-
-    for output in app.stream(inputs):
-        for key, value in output.items():
-            # Node
-            st.write(f"Node '{key}':")
-            # Optional: print full state at each node
-            st.write(value)
-        print("\n---\n")
-
-    # Generate and display the graph image
-    st.write(value["generation"])
 
     graph_image_path = "graph.png"
     app.get_graph().draw_mermaid_png(output_file_path=graph_image_path)

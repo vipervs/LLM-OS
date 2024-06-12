@@ -1,10 +1,7 @@
-.envrc
-.direnv
+.cse
+.arxiv
 .temp
 .chroma
-/arxiv
-/adaptiv_rag
-/cse
 /temp
 */.streamlit/secrets.toml
 .mypy_cache
