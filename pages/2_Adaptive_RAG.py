@@ -247,6 +247,11 @@ if process:
     # Compile the graph
     app = workflow.compile()
 
+    for output in app.stream(inputs):
+        for key, value in output.items():
+            st.write(f"Finished running: {key}:")
+    st.write(value["generation"])
+
     graph_image_path = "graph.png"
     app.get_graph().draw_mermaid_png(output_file_path=graph_image_path)
     st.image(graph_image_path, caption='StateGraph Execution')

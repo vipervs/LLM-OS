@@ -8,7 +8,6 @@ from langchain_core.runnables import RunnableSequence
 from langchain import hub
 from langchain_core.output_parsers import StrOutputParser
 from dotenv import load_dotenv
-from prometheus_client import Summary
 load_dotenv()
 
 # Initialize OllamaFunctions with your preferred model and format
